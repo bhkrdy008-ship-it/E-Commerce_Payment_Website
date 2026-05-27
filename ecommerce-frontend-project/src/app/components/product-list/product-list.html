@@ -1,0 +1,7 @@
+<p>product-list works!</p>
+
+<ul class="products">
+    <li *ngFor="let product of products">
+        {{ product.name }} - {{ product.unitPrice | currency }}
+    </li>
+</ul>

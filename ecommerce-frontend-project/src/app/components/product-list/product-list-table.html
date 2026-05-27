@@ -1,0 +1,18 @@
+<p>product-list works!</p>
+<table class="table table-bordered table-hover">
+    <thead>
+        <tr>
+            <th>Image</th>
+            <th>Name</th>
+            <th>Unit Price</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr *ngFor="let product of products">
+            <td><img src="{{ product.imageUrl }}"></td>
+            <td>{{ product.name }}</td>
+            <td>{{ product.unitPrice | currency }}</td>
+        </tr>
+    </tbody>
+</table>
+
