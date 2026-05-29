@@ -11,53 +11,63 @@ import { ActivatedRoute } from '@angular/router';
 })
 export class ProductList {
 
-    constructor(private productService: ProductService, private route: ActivatedRoute) {}
+    products: Product[] = []
+  currentCategoryId: number = 1;
+  searchMode: boolean = false;
 
-    products: Product[] = [];
-    private categoryId : number = 1;
-    searchMode: boolean = false;
+  constructor(private productService: ProductService,
+              private route: ActivatedRoute) { }
 
-    ngOnInit() {
+  ngOnInit() {
+    this.route.paramMap.subscribe(() => {
+      this.listProducts();
+    });
+  }
 
-      this.route.paramMap.subscribe(() => {
-        this.listProducts();
-      });
+  listProducts() {
+
+    this.searchMode = this.route.snapshot.paramMap.has('keyword');
+
+    if (this.searchMode) {
+      this.handleSearchProducts();
+    }
+    else {
+      this.handleListProducts();
     }
 
-    listProducts() {
-      this.searchMode = this.route.snapshot.paramMap.has('keyword');
+  }
 
-      if(this.searchMode){
-        this.handleSearchProducts();
-      }
-      else {
-        this.handleListProducts();
-      }
+  handleSearchProducts() {
 
-    }
+    const theKeyword: string = this.route.snapshot.paramMap.get('keyword')!;
 
-    handleSearchProducts() {
-      const theKeyword: string = this.route.snapshot.paramMap.get('keyword')!;
-
-      this.productService.searchProducts(theKeyword).subscribe(data => {
+    // now search for the products using keyword
+    this.productService.searchProducts(theKeyword).subscribe(
+      data => {
         this.products = data;
-      });
+      }
+    )
+  }
 
+  handleListProducts() {
+
+    // check if "id" parameter is available
+    const hasCategoryId: boolean = this.route.snapshot.paramMap.has('id');
+
+    if (hasCategoryId) {
+      // get the "id" param string. convert string to a number using the "+" symbol
+      this.currentCategoryId = +this.route.snapshot.paramMap.get('id')!;
+    }
+    else {
+      // not category id available ... default to category id 1
+      this.currentCategoryId = 1;
     }
 
-    handleListProducts() {
-   let hasId:boolean = this.route.snapshot.paramMap.has('id');
-
-      if (hasId) {
-        this.categoryId = +this.route.snapshot.paramMap.get('id')!;
+    // now get the products for the given category id
+    this.productService.getProductList(this.currentCategoryId).subscribe(
+      data => {
+        this.products = data;
       }
-      else {
-        this.categoryId = 1;
-      }
-
-
-        this.productService.getProductList(this.categoryId).subscribe(data => {
-            this.products = data;
-        });
-    }
+    )
+  }
 }
