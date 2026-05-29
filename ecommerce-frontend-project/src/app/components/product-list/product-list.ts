@@ -14,6 +14,10 @@ export class ProductList {
     products: Product[] = []
   currentCategoryId: number = 1;
   searchMode: boolean = false;
+  pageNumber: number = 1;
+  pageSize: number = 5
+  theTotalElements: number = 0;
+  previousCategoryId: number = 1;
 
   constructor(private productService: ProductService,
               private route: ActivatedRoute) { }
@@ -63,10 +67,17 @@ export class ProductList {
       this.currentCategoryId = 1;
     }
 
+    if(this.currentCategoryId != this.previousCategoryId){
+      this.pageNumber = 1;
+    }
+
     // now get the products for the given category id
-    this.productService.getProductList(this.currentCategoryId).subscribe(
+    this.productService.getProductListPaginated(this.pageNumber - 1, this.pageSize, this.currentCategoryId).subscribe(
       data => {
-        this.products = data;
+        this.products = data._embedded.products;
+        this.theTotalElements = data.page.totalElements;
+        this.pageNumber = data.page.number + 1;
+        this.pageSize = data.page.size;
       }
     )
   }
