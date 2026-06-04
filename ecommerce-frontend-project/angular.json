@@ -31,8 +31,8 @@
             "tsConfig": "tsconfig.app.json",
             "assets": [
               {
-               "glob": "**/*",
-               "input": "public"
+                "glob": "**/*",
+                "input": "public"
               },
               {
                 "glob": "**/*",
@@ -52,7 +52,8 @@
             },
             "ssr": {
               "entry": "src/server.ts"
-            }
+            },
+            "polyfills": ["@angular/localize/init"]
           },
           "configurations": {
             "production": {
