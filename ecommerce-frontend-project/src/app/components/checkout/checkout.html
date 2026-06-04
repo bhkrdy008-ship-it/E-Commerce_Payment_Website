@@ -201,103 +201,22 @@
           </div>
         </div>
 
+       <!--stripe elements-->
+       <div formGroupName="creditCard" class="form-area">
+          <h3>Credit or Debit Card</h3>
+          <div id="card-element">
 
-        <div formGroupName="creditCard" class="form-area">
-          <h3>Credit Card</h3>
-
-          <div class ="row">
-            <div class =col-md-2><label>Card Type</label></div>
-            <div class = "col-md-9">
-              <div class="input-space">
-                <select formControlName="cardType">
-                  <option>Select Card Type</option>
-                  <option>Visa</option>
-                  <option>Mastercard</option>
-                  <option>American Express</option>
-                  <option>Discover</option>
-                </select>
-                <div *ngIf="creditCardType?.invalid && (creditCardType?.touched || creditCardType?.dirty)" class="text-danger">
-                  <div *ngIf="creditCardType?.errors?.['required']">Card Type is required.</div>
-                </div>
-              </div>
-            </div>
           </div>
 
-          <div class ="row">
-            <div class =col-md-2><label>Name on Card</label></div>
-            <div class = "col-md-9">
-              <div class="input-space">
-                <input formControlName="nameOnCard" type="text" >
-                <div *ngIf="creditCardNameOnCard?.invalid && (creditCardNameOnCard?.touched || creditCardNameOnCard?.dirty)" class="text-danger">
-                  <div *ngIf="creditCardNameOnCard?.errors?.['required'] || creditCardNameOnCard?.errors?.['notOnlyWhitespace']">Name on Card is required.</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class ="row">
-            <div class =col-md-2><label>Card Number</label></div>
-            <div class = "col-md-9">
-              <div class="input-space">
-                <input formControlName="cardNumber" type="text" >
-                <div *ngIf="creditCardNumber?.invalid && (creditCardNumber?.touched || creditCardNumber?.dirty)" class="text-danger">
-                  <div *ngIf="creditCardNumber?.errors?.['required'] || creditCardNumber?.errors?.['notOnlyWhitespace']">Card Number is required.</div>
-                  <div *ngIf="creditCardNumber?.errors?.['minlength']">Card Number must be 16 digits.</div>
-                  <div *ngIf="creditCardNumber?.errors?.['maxlength']">Card Number must be 16 digits.</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class ="row">
-            <div class =col-md-2><label>Expiration Month</label></div>
-            <div class = "col-md-9">
-              <div class="input-space">
-                <select formControlName="expirationMonth">
-                  <option *ngFor="let month of creditCardMonths"> {{month}}</option>
-                </select>
-                <div *ngIf="creditCardExpirationMonth?.invalid && (creditCardExpirationMonth?.touched || creditCardExpirationMonth?.dirty)" class="text-danger">
-                  <div *ngIf="creditCardExpirationMonth?.errors?.['required']">Expiration Month is required.</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class ="row">
-            <div class =col-md-2><label>Expiration Year</label></div>
-            <div class = "col-md-9">
-              <div class="input-space">
-                <select formControlName="expirationYear">
-                  <option *ngFor="let year of creditCardYears"> {{year}}</option>
-                </select>
-
-                <div *ngIf="creditCardExpirationYear?.invalid && (creditCardExpirationYear?.touched || creditCardExpirationYear?.dirty)" class="text-danger">
-                  <div *ngIf="creditCardExpirationYear?.errors?.['required']">Expiration Year is required.</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class ="row">
-            <div class =col-md-2><label>CVV</label></div>
-            <div class = "col-md-9">
-              <div class="input-space">
-                <input formControlName="securityCode" type="text" >
-
-                <div *ngIf="creditCardSecurityCode?.invalid && (creditCardSecurityCode?.touched || creditCardSecurityCode?.dirty)" class="text-danger">
-                  <div *ngIf="creditCardSecurityCode?.errors?.['required'] || creditCardSecurityCode?.errors?.['notOnlyWhitespace']">CVV is required.</div>
-                  <div *ngIf="creditCardSecurityCode?.errors?.['maxlength']">CVV must be a maximum of 3 digits.</div>
-                </div>
-              </div>
-            </div>
-          </div>
+          <div id="card-errors" class="displayError.textContext!=='': 'alert alert-danger mt-1'"></div>
+       </div>
 
           <div class = "form-area">
             <h3>Review Order</h3>
             <p>Total Price: {{ totalPrice | currency:'USD' }}</p>
             <p>Total Quantity: {{ totalQuantity }}</p>
           </div>
-        </div>
+
          <div class="text-center">
           <button type="submit" class="btn btn-primary">Purchase</button>
         </div>

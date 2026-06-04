@@ -10,6 +10,8 @@ import { Router } from '@angular/router';
 import { OrderItem } from '../../common/order-item';
 import { Purchase } from '../../common/purchase';
 import { Order } from '../../common/order';
+import { environment } from '../../../environments/environments';
+import { PaymentInfo } from '../../common/payment-info';
 
 @Component({
   selector: 'app-checkout',
@@ -32,11 +34,21 @@ export class Checkout {
   billingAddressStates: State[] = [];
 
   checkoutFormGroup: FormGroup = new FormGroup({});
+
+  stripe = Stripe(environment.stripePublishableKey);
+
+  paymentInfo: PaymentInfo = new PaymentInfo(0, '', '');
+  cardElement: any;
+  displayError: any = '';
+
+
   constructor(private formBuilder: FormBuilder, private checkoutService: CheckoutService, private cartService: CartServices,
      private purchaseService: PurchaseService, private router: Router) {
   }
 
   ngOnInit() {
+
+    this.setupStripePaymentForm();
 
     this.checkoutService.getCountries().subscribe(
       data => {
@@ -69,12 +81,12 @@ export class Checkout {
     zipCode: new FormControl('', [Validators.required, CheckoutValidation.notOnlyWhitespace])
   }),
   creditCard: this.formBuilder.group({
-    cardType: new FormControl('', [Validators.required]),
-    nameOnCard: new FormControl('', [Validators.required, Validators.minLength(2), CheckoutValidation.notOnlyWhitespace]),
-    cardNumber: new FormControl('', [Validators.required, Validators.minLength(16), Validators.maxLength(16), CheckoutValidation.notOnlyWhitespace]),
-    securityCode: new FormControl('', [Validators.required, Validators.minLength(0), Validators.maxLength(3), CheckoutValidation.notOnlyWhitespace]),
-    expirationMonth: new FormControl('', [Validators.required]),
-    expirationYear: new FormControl('', [Validators.required])
+    // cardType: new FormControl('', [Validators.required]),
+    // nameOnCard: new FormControl('', [Validators.required, Validators.minLength(2), CheckoutValidation.notOnlyWhitespace]),
+    // cardNumber: new FormControl('', [Validators.required, Validators.minLength(16), Validators.maxLength(16), CheckoutValidation.notOnlyWhitespace]),
+    // securityCode: new FormControl('', [Validators.required, Validators.minLength(0), Validators.maxLength(3), CheckoutValidation.notOnlyWhitespace]),
+    // expirationMonth: new FormControl('', [Validators.required]),
+    // expirationYear: new FormControl('', [Validators.required])
   })
 
 
@@ -85,19 +97,35 @@ this.reviewCartDetails();
 const startMonth: number = new Date().getMonth() + 1;
 console.log("startMonth: " + startMonth);
 
-this.checkoutService.getCreditCardMonths(startMonth).subscribe(
-  data => {
-    console.log("Retrieved credit card months: " + JSON.stringify(data));
-    this.creditCardMonths = data;
-  }
-);
+// this.checkoutService.getCreditCardMonths(startMonth).subscribe(
+//   data => {
+//     console.log("Retrieved credit card months: " + JSON.stringify(data));
+//     this.creditCardMonths = data;
+//   }
+// );
 
-this.checkoutService.getCreditCardYears().subscribe(
-  data => {
-    console.log("Retrieved credit card years: " + JSON.stringify(data));
-    this.creditCardYears = data;
+// this.checkoutService.getCreditCardYears().subscribe(
+//   data => {
+//     console.log("Retrieved credit card years: " + JSON.stringify(data));
+//     this.creditCardYears = data;
+//   }
+// );
+
   }
-);
+
+  setupStripePaymentForm() {
+    var elements = this.stripe.elements();
+
+    this.cardElement = elements.create('card', { hidePostalCode: true });
+    this.cardElement.mount('#card-element');
+    this.cardElement.on('change', (event: any) => {
+      this.displayError = document.getElementById('card-errors');
+      if (event.complete) {
+        this.displayError.textContent = '';
+      } else if (event.error) {
+        this.displayError.textContent = event.error.message;
+      }
+    });
 
   }
 
@@ -134,6 +162,9 @@ this.checkoutService.getCreditCardYears().subscribe(
 
   onSubmit() {
 
+    console.log(this.paymentInfo);
+    console.log("purchased");
+
     if (this.checkoutFormGroup.invalid) {
       this.checkoutFormGroup.markAllAsTouched();
       return;
@@ -163,20 +194,71 @@ this.checkoutService.getCreditCardYears().subscribe(
     purchase.order = order;
     purchase.orderItems = orderItems;
 
-    this.purchaseService.placeOrder(purchase).subscribe({
-      next: response => {
-        alert(`Your order has been received.\nOrder tracking number: ${response.orderTrackingNumber}`);
+    this.paymentInfo.amount = Math.round(this.totalPrice * 100);
+    this.paymentInfo.currency = "USD";
+    this.paymentInfo.receipt_email = purchase.customer.email;
 
-        this.cartService.cartItems = [];
-        this.cartService.totalPrice.next(0);
-        this.cartService.totalQuantity.next(0);
 
-        this.router.navigateByUrl("/products");
-      },
-      error: error => {
-        alert(`There was an error: ${error.message}`);
-      }
-    });
+
+    if(!this.checkoutFormGroup.invalid && this.displayError.textContent === '') {
+
+      console.log("inside if statement");
+
+      this.purchaseService.createPaymentIntent(this.paymentInfo).subscribe(
+        (paymentResponse) => {
+          this.stripe.confirmCardPayment(paymentResponse.client_secret, {
+            payment_method: {
+              card: this.cardElement,
+              billing_details: {
+                name: `${purchase.customer.firstName} ${purchase.customer.lastName}`,
+                email: purchase.customer.email,
+                address: {
+                  line1: purchase.billingAddress.street,
+                  city: purchase.billingAddress.city,
+                  state: purchase.billingAddress.state,
+                  postal_code: purchase.billingAddress.zipCode,
+                  country: this.billingAddressCountry?.value.code
+                }
+              }
+            }
+          },{ handleActions: false })
+          .then((result: any) => {
+            if (result.error) {
+              // Show error to your customer
+              alert(`There was an error: ${result.error.message}`);
+            }
+            else {
+              // Place order after successful payment
+              this.purchaseService.placeOrder(purchase).subscribe(
+                (response) => {
+                  alert(`Your order has been received.\nOrder tracking number: ${response.orderTrackingNumber}`);
+                  this.resetCart();
+                },
+                (error) => {
+                  alert(`There was an error: ${error.message}`);
+                }
+              );
+            }
+          });
+        }
+      );
+
+
+
+    }
+    else {
+      this.checkoutFormGroup.markAllAsTouched();
+      return;
+    }
+  }
+  resetCart() {
+    this.cartService.cartItems = [];
+    this.cartService.totalPrice.next(0);
+    this.cartService.totalQuantity.next(0);
+
+    this.checkoutFormGroup.reset();
+
+    this.router.navigateByUrl("/products");
   }
 
 
