@@ -1,7 +1,9 @@
 package ecommerce_backend.project;
 
+import ecommerce_backend.project.Entity.Country;
 import ecommerce_backend.project.Entity.Product;
 import ecommerce_backend.project.Entity.ProductCategory;
+import ecommerce_backend.project.Entity.State;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.metamodel.EntityType;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,6 +42,17 @@ public class myDataRestConfig implements RepositoryRestConfigurer {
         // disable HTTP methods for ProductCategory: PUT, POST, DELETE and PATCH
         config.getExposureConfiguration()
                 .forDomainType(ProductCategory.class)
+                .withItemExposure((metdata, httpMethods) -> httpMethods.disable(theUnsupportedActions))
+                .withCollectionExposure((metdata, httpMethods) -> httpMethods.disable(theUnsupportedActions));
+
+        config.getExposureConfiguration()
+                .forDomainType(Country.class)
+                .withItemExposure((metdata, httpMethods) -> httpMethods.disable(theUnsupportedActions))
+                .withCollectionExposure((metdata, httpMethods) -> httpMethods.disable(theUnsupportedActions));
+
+        // disable HTTP methods for ProductCategory: PUT, POST, DELETE and PATCH
+        config.getExposureConfiguration()
+                .forDomainType(State.class)
                 .withItemExposure((metdata, httpMethods) -> httpMethods.disable(theUnsupportedActions))
                 .withCollectionExposure((metdata, httpMethods) -> httpMethods.disable(theUnsupportedActions));
 

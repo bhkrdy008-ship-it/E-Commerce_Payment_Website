@@ -1,12 +1,12 @@
-import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Injectable } from '@angular/core';
+import { Observable } from 'rxjs/internal/Observable';
+import { map } from 'rxjs/internal/operators/map';
 import { Product } from '../common/product';
-import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
 import { ProductCategory } from '../common/product-category';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class ProductService {
 
@@ -24,12 +24,12 @@ export class ProductService {
     return this.httpClient.get<Product>(productUrl);
   }
 
-  getProductListPaginated(page: number, size: number, theCategoryId: number): Observable<GetResponseProducts> {
+  getProductList(theCategoryId: number): Observable<Product[]> {
 
+    // need to build URL based on category id
+    const searchUrl = `${this.baseUrl}/search/findByCategoryId?id=${theCategoryId}`;
 
-    const searchUrl = `${this.baseUrl}/search/findByCategoryId?id=${theCategoryId}` + `&page=${page}&size=${size}`;
-
-    return this.httpClient.get<GetResponseProducts>(searchUrl);
+    return this.getProducts(searchUrl);
   }
 
   searchProducts(theKeyword: string): Observable<Product[]> {
@@ -38,6 +38,13 @@ export class ProductService {
     const searchUrl = `${this.baseUrl}/search/findByNameContaining?name=${theKeyword}`;
 
     return this.getProducts(searchUrl);
+  }
+
+  getProductListPaginated(page: number, size: number, theCategoryId: number): Observable<GetResponseProducts> {
+
+    const searchUrl = `${this.baseUrl}/search/findByCategoryId?id=${theCategoryId}&page=${page}&size=${size}`;
+
+    return this.httpClient.get<GetResponseProducts>(searchUrl);
   }
 
   private getProducts(searchUrl: string): Observable<Product[]> {
@@ -58,10 +65,10 @@ interface GetResponseProducts {
     products: Product[];
   }
   page: {
-    size: number,
-    totalElements: number,
-    totalPages: number,
-    number: number
+    size: number;
+    totalElements: number;
+    totalPages: number;
+    number: number;
   }
 }
 
@@ -70,3 +77,8 @@ interface GetResponseProductCategory {
     productCategory: ProductCategory[];
   }
 }
+  interface GetResponse {
+    _embedded: {
+      products: Product[];
+    }
+  }

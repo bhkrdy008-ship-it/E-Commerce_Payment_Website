@@ -2,6 +2,8 @@ import { Component } from '@angular/core';
 import { ProductService } from '../../services/product-service';
 import { Product } from '../../common/product';
 import { ActivatedRoute } from '@angular/router';
+import { CartItem } from '../../common/cart-item';
+import { CartServices } from '../../services/cart-services';
 
 @Component({
   selector: 'app-product-list',
@@ -11,16 +13,18 @@ import { ActivatedRoute } from '@angular/router';
 })
 export class ProductList {
 
-    products: Product[] = []
+  products: Product[] = []
   currentCategoryId: number = 1;
   searchMode: boolean = false;
-  pageNumber: number = 1;
-  pageSize: number = 5
+
+  // pagination properties
+  thePageNumber: number = 1;
+  thePageSize: number = 10;
   theTotalElements: number = 0;
   previousCategoryId: number = 1;
 
   constructor(private productService: ProductService,
-              private route: ActivatedRoute) { }
+              private route: ActivatedRoute, private cartService: CartServices) { }
 
   ngOnInit() {
     this.route.paramMap.subscribe(() => {
@@ -53,6 +57,13 @@ export class ProductList {
     )
   }
 
+     addToCart(tempProduct: Product) {
+      console.log(`Adding to cart: ${tempProduct.name}, ${tempProduct.unitPrice}`);
+
+      const theCartItem = new CartItem(tempProduct);
+      this.cartService.addToCart(theCartItem);
+    }
+
   handleListProducts() {
 
     // check if "id" parameter is available
@@ -67,17 +78,19 @@ export class ProductList {
       this.currentCategoryId = 1;
     }
 
-    if(this.currentCategoryId != this.previousCategoryId){
-      this.pageNumber = 1;
+    // if category changed, reset page number to 1
+    if (this.currentCategoryId !== this.previousCategoryId) {
+      this.thePageNumber = 1;
+      this.previousCategoryId = this.currentCategoryId;
     }
 
-    // now get the products for the given category id
-    this.productService.getProductListPaginated(this.pageNumber - 1, this.pageSize, this.currentCategoryId).subscribe(
-      data => {
+    // now get the products for the given category id with pagination
+    this.productService.getProductListPaginated(this.thePageNumber - 1, this.thePageSize, this.currentCategoryId).subscribe(
+      (data: any) => {
         this.products = data._embedded.products;
         this.theTotalElements = data.page.totalElements;
-        this.pageNumber = data.page.number + 1;
-        this.pageSize = data.page.size;
+        this.thePageNumber = data.page.number + 1;
+        this.thePageSize = data.page.size;
       }
     )
   }
